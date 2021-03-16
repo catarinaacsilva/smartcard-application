@@ -2,7 +2,7 @@ import logging
 
 from django.shortcuts import render
 
-from cc import *
+#from cc import *
 
 logger = logging.getLogger(__name__)
 
