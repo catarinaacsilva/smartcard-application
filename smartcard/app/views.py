@@ -1,5 +1,8 @@
 import logging
+
 from django.shortcuts import render
+
+from cc import *
 
 logger = logging.getLogger(__name__)
 
@@ -8,3 +11,4 @@ logger = logging.getLogger(__name__)
 '''
 def index(request):
     return render(request, 'index.html')
+
