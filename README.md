@@ -3,6 +3,8 @@
 
 ## Requirements
 
+- Ubuntu >= 20.04
+- swig: `sudo apt install swig`
 
 ## Authors
 
