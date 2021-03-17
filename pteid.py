@@ -236,7 +236,6 @@ class PortugueseCitizenCard:
     '''
         Retreive the CITIZEN AUTHENTICATION CERTIFICATE from a connected CC smartcard
     '''
-
     def PTEID_GetCertificate(self, slot):
         AUTH_CERT_LABEL = 'CITIZEN AUTHENTICATION CERTIFICATE'
 
@@ -341,6 +340,9 @@ class PortugueseCitizenCard:
             'Verified'.format(slot,signature))
             return True
 
+    '''
+        This method can be used to logout a User
+    '''
     def logout(self, slot):
         try:
             session = self.sessions[slot]
@@ -349,6 +351,10 @@ class PortugueseCitizenCard:
         except PyKCS11Error as strerror:
             session.closeSession()
             logging.debug('No open session found for slot with the id :{:2d} \nInfo : \n{:15s}'.format(slot, strerror.__doc__))
+
+    '''
+        Obtain the name of the user from the cert
+    '''
 
     def GetNameFromCERT(self,cert):
         if isinstance(cert,str):
