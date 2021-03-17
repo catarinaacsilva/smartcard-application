@@ -16,25 +16,14 @@ from cryptography.exceptions import *
 
 import logging
 
-class PortugueseCitizenCard:
-    '''
-    This class specifies all operations that can be executed on a provided Portuguese Citizen Card connected to the
+'''
+    This class has all operations that can be executed on a provided Portuguese Citizen Card connected to the
     computer, based on the slot they are occupying.
-    The class depends on the libs :
-        - cryptography: available @ github.com/pyca/cryptography
-        - pyopenssl:available @ github.com/pyca/pyopenssl
-        - PyKCS11 :available @ github.com/LudovicRousseau/PyKCS11
-    
-    It was developed using this Wrapper as a base:
-        - ChatSecure: available @ github.com/luminoso/chatsecure/blob/master/M2/PKCS11_Wrapper.py
-    '''
+'''
+class PortugueseCitizenCard:
 
     def __init__(self):
-        '''
-        Initialization of the Class:
-        - All certs/crls needed for the CC validation are loaded
-        - All the Smartcards Names are retreived
-        '''
+
         logging.info('Entering CC interface')
 
         self.cert=None
@@ -43,19 +32,17 @@ class PortugueseCitizenCard:
         #logging.info( 'Loaded all Certificates and CRL's')
 
         self.ccStoreContext = self._ccStoreContext(rootCerts, trustedCerts, crlList)
-        logging.info(
-                          'Store Context description completed')
+        logging.info('Store Context description completed')
 
         self.lib = 'libpteidpkcs11.so'
         self.cipherMechanism = Mechanism(PyKCS11.CKM_SHA256_RSA_PKCS, '')
         self.sessions = self.__initPyKCS11__()
         self.fullnames = self.getSmartcardsNames()
 
+    '''
+        Convert all the data retrived from the cert and crl files encoded in PEM or ASN1 format
+    '''
     def _loadPkiCertsAndCrls(self):
-        '''
-        Private method to convert all the data retrived from the cert and crl files encoded in PEM or ASN1 format
-        :return:
-        '''
         rootCerts = ()
         trustedCerts = ()
         crlList = ()
@@ -115,14 +102,10 @@ class PortugueseCitizenCard:
 
         return rootCerts, trustedCerts, crlList
 
+    '''
+        Creates a X509StoreContext Description that can be used to validate a given Citizen Card
+    '''
     def _ccStoreContext(self, rootCerts, trustedCerts, crlList):
-        '''
-        This method creates a X509StoreContext Description that can be used to validate a given Citizen Card
-        :param rootCerts: X509 Certificates from the root entities of the Portuguese Citizen Card
-        :param trustedCerts: X509 Authentication Certificates from the Portuguese Citizen Card Autority
-        :param crlList: X509 Authentication Certificates Revocation Lists from the Portuguese Citizen Card Autority
-        :return:
-        '''
         try:
             store = X509Store()
 
@@ -158,13 +141,10 @@ class PortugueseCitizenCard:
         else:
             return store
 
+    '''
+        Initialize the use of the the PyKCS11 module
+    '''
     def __initPyKCS11__(self):
-        '''
-        This method will initialize the use of the the PyKCS11 module developed by Ludovic Rousseau which is available on https://pypi.org/project/pykcs11/
-           and whose source code is available at https://github.com/LudovicRousseau
-        :return: list of open sessions
-        '''
-
         AUTH_CERT_LABEL = 'CITIZEN AUTHENTICATION CERTIFICATE'
         AUTH_KEY_LABEL = 'CITIZEN AUTHENTICATION KEY'
 
@@ -203,13 +183,10 @@ class PortugueseCitizenCard:
                 logging.error( 'Exiting Module because no CC was found')
                 exit(11)
 
-    def PTEID_GetID(self, sessionIdx):
-        '''
+    '''
         This method gets the Name of the owner of the CC by fetching it from the CKA_SUBJECT field on the present CC session
-
-        :param sessionIdx: index of the slot with a openSession
-        :return: fullname of the person or None if no fullname is found
-        '''
+    '''
+    def PTEID_GetID(self, sessionIdx):
         AUTH_CERT_LABEL = 'CITIZEN AUTHENTICATION CERTIFICATE'
 
         logging.info( 'Entering PTEID_GetID with PyKCSS session id: {:2d}'.format(sessionIdx))
@@ -233,14 +210,10 @@ class PortugueseCitizenCard:
             else:
                 names = infos1.split('BI')[1].split('\x0c')
                 return ' '.join(names[i] for i in range(1, len(names)))
-
+    '''
+        Gets the Name of the owner of the CC by fetching it from the CKA_SUBJECT field on the present CC session
+    '''
     def PTEID_GetBI(self, sessionIdx):
-        '''
-        This method gets the Name of the owner of the CC by fetching it from the CKA_SUBJECT field on the present CC session
-
-        :param sessionIdx: index of the slot with a openSession
-        :return: BI number
-        '''
         AUTH_CERT_LABEL = 'CITIZEN AUTHENTICATION CERTIFICATE'
 
         logging.info( 'Entering PTEID_GetID with PyKCSS session id: {:2d}'.format(sessionIdx))
@@ -265,24 +238,19 @@ class PortugueseCitizenCard:
                 bi = infos1.split('BI')[1][:8]
                 return bi
 
-
+    '''
+        Return CC serial number
+    '''
     def certGetSerial(self):
-        '''
-        Method to return CC serial number
-        :return: int
-        '''
         if not self.cert is None:
             return self.cert.serial_number
         return None
 
-    def PTEID_GetCertificate(self, slot):
-        '''
-        Method to retreive the CITIZEN AUTHENTICATION CERTIFICATE from a connected CC smartcard
-        :param slot: slot number
-        :return:- X509 Certificate if the certificate is found
-                - None if no certificate is found
-        '''
+    '''
+        Retreive the CITIZEN AUTHENTICATION CERTIFICATE from a connected CC smartcard
+    '''
 
+    def PTEID_GetCertificate(self, slot):
         AUTH_CERT_LABEL = 'CITIZEN AUTHENTICATION CERTIFICATE'
 
         logging.info( 'Entering PTEID_GetCertificate with PyKCSS session id :{:2d}'.format(slot))
@@ -321,12 +289,10 @@ class PortugueseCitizenCard:
                     self.cert = x509.load_pem_x509_certificate(cert, default_backend())
                     return cert
 
+    '''
+        Gets all names of the owners of the Portuguese Citizen Cards attached to the Computer
+    '''
     def getSmartcardsNames(self):
-        '''
-        This method gets all names of the owners of the Portuguese Citizen Cards attached to the Computer
-        :return:- None : No citizen card found
-                - fullnames :List of names of the cards of the slots available
-        '''
         try:
             fullnames = [self.PTEID_GetID(i) for i in self.slots]
         except:
@@ -336,23 +302,17 @@ class PortugueseCitizenCard:
         else:
             return fullnames
 
-    def login(self, slot):
-        '''
+    '''
         This method can be used to login a User into a PyKCS11 session of the Citizen Card
-        :param slot: number of the slot in which the smartcart is connected to
-        :return:-True : if the login is sucessfull
-                -False : if the login is not sucessfull
-        '''
+    '''
+    def login(self, slot):
         session = self.sessions[slot]
         name = self.fullnames[slot]
 
+    '''
+        Signs a string using the Private Key of the Portuguese Citizen Card
+    '''
     def sign_data(self, slot, data):
-        '''
-        This method signs a string using the Private Key of the Portuguese Citizen Card
-        :param slot: number of the slot in which the smartcart is connected to
-        :param data: string to be signed
-        :return: signature: bytes of the message signed
-        '''
         label = 'CITIZEN AUTHENTICATION KEY'
 
         session = self.sessions[slot]
@@ -382,18 +342,11 @@ class PortugueseCitizenCard:
                 return bytes(signedBytelist)
         return None
 
-    def verifySignature(self, cert, data, signature):
-        '''
-        This method is used to verify the signature of a document/string signed using a certificate that was provided before.
+    '''
+        Verify the signature of a document/string signed using a certificate that was provided before.
         The certificate must pass the test of trust by verifying the Chain of Trust of the Portuguese Citizen Card
-        :param cert: certificate from the Portuguese Citizen Card
-        :param data: unsigned data from the owner of the Certificate
-        :param signature: data that was signed using a Private Key from the Portuguese Citizen Card
-        :return: -True : If the signature is from the owner of the Citizen Card which provided the certificate and that
-                        was used to sign the data
-                -False: If the signature is not from the owner of the Citizen Card which provided the certificate and
-                        that was used to sign the data
-        '''
+    '''
+    def verifySignature(self, cert, data, signature):
         cert = x509.load_pem_x509_certificate(cert, default_backend())
         pubk = cert.public_key()
         padding = _aspaadding.PKCS1v15()
