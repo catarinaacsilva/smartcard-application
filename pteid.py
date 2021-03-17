@@ -29,8 +29,7 @@ class PortugueseCitizenCard:
         self.cert=None
 
         rootCerts, trustedCerts, crlList = self._loadPkiCertsAndCrls()
-        #logging.info( 'Loaded all Certificates and CRL's')
-
+    
         self.ccStoreContext = self._ccStoreContext(rootCerts, trustedCerts, crlList)
         logging.info('Store Context description completed')
 
@@ -77,7 +76,7 @@ class PortugueseCitizenCard:
                         else:
                             root = load_certificate(FILETYPE_ASN1, cert_info)
                     except Error:
-                        logging.error( 'Exception while loading certificate from file : {:s} {:s}'.format(
+                        logging.error('Exception while loading certificate from file : {:s} {:s}'.format(
                             basename[0], filename))
                         exit(10)
                     else:
@@ -85,19 +84,19 @@ class PortugueseCitizenCard:
 
         logging.info('Loaded Root certificates : {:d} out of {:d} '.format(len(rootCerts),
                                                                                       len(listdir(basename[0]))))
-        logging.info( 'Loaded Authentication certificates: {:d} out of {:d} '.format(len(trustedCerts), len(
+        logging.info('Loaded Authentication certificates: {:d} out of {:d} '.format(len(trustedCerts), len(
             listdir(basename[0]))))
 
         for filename in listdir(basename[1]):
             try:
                 crl_info = open(basename[1] + '/' + filename, 'rb').read()
             except IOError:
-                logging.error( 'IO Exception while reading file : {:s} {:s}'.format(basename[0], filename))
+                logging.error('IO Exception while reading file : {:s} {:s}'.format(basename[0], filename))
             else:
                 if '.crl' in filename:
                     crls = load_crl(FILETYPE_ASN1, crl_info)
             crlList = crlList + (crls,)
-        logging.info( 'Certificate revocation lists loaded: {:d} out of {:d} '.format(len(crlList), len(
+        logging.info('Certificate revocation lists loaded: {:d} out of {:d} '.format(len(crlList), len(
             listdir(basename[1]))))
 
         return rootCerts, trustedCerts, crlList
@@ -114,29 +113,25 @@ class PortugueseCitizenCard:
                 store.add_cert(_rootCerts)
                 i += 1
 
-            logging.info( 'Root Certificates Added to the X509 Store Context description : {:d}'.format(i))
+            logging.info('Root Certificates Added to the X509 Store Context description : {:d}'.format(i))
 
             i = 0
             for _trustedCerts in trustedCerts:
                 store.add_cert(_trustedCerts)
                 i += 1
 
-            logging.info(
-                              'Trusted Authentication Certificates Added to the X509 Store Context description : {:d}'.format(
-                                  i))
+            logging.info('Trusted Authentication Certificates Added to the X509 Store Context description : {:d}'.format(i))
 
             i = 0
             for _crlList in crlList:
                 store.add_crl(_crlList)
                 i += 1
 
-            logging.info(
-                              'Certificates Revocation Lists Added to the X509 Store Context description : {:d}'.format(
-                                  i))
+            logging.info('Certificates Revocation Lists Added to the X509 Store Context description : {:d}'.format(i))
 
             store.set_flags(X509StoreFlags.CRL_CHECK | X509StoreFlags.IGNORE_CRITICAL)
         except X509StoreContext:
-            logging.error( 'Store Context description failed')
+            logging.error('Store Context description failed')
             return None
         else:
             return store
@@ -156,17 +151,17 @@ class PortugueseCitizenCard:
             pkcs11 = PyKCS11Lib()
             pkcs11.load(self.lib)
         except PyKCS11Error:
-            logging.error( 'PortugueseCitizenCard:   We could not load the PyKCS11 lib')
+            logging.error('PortugueseCitizenCard: We could not load the PyKCS11 lib')
             Exception('We could not load the lib')
             exit(10)
         except KeyboardInterrupt:
-            logging.info( 'PortugueseCitizenCard:   Exiting Module by Keyboard Interruption')
+            logging.info('PortugueseCitizenCard: Exiting Module by Keyboard Interruption')
             exit(0)
         else:
             try:
                 # listing all card slots
                 self.slots = pkcs11.getSlotList(tokenPresent=True)
-                logging.info( 'The program found ' + str(len(self.slots)) + ' slots')
+                logging.info('The program found ' + str(len(self.slots)) + ' slots')
 
                 if len(self.slots) < 1:
                     exit(-1)
@@ -174,13 +169,13 @@ class PortugueseCitizenCard:
                 return [pkcs11.openSession(self.slots[x]) for x in range(0, len(self.slots))]
 
             except KeyboardInterrupt:
-                logging.info( 'Exiting Module by Keyboard Interruption')
+                logging.info('Exiting Module by Keyboard Interruption')
                 exit(0)
             except PyKCS11Error:
-                logging.error( 'We could not execute the method openSession for the given smartcard')
+                logging.error('We could not execute the method openSession for the given smartcard')
                 exit(10)
             except:
-                logging.error( 'Exiting Module because no CC was found')
+                logging.error('Exiting Module because no CC was found')
                 exit(11)
 
     '''
@@ -189,23 +184,19 @@ class PortugueseCitizenCard:
     def PTEID_GetID(self, sessionIdx):
         AUTH_CERT_LABEL = 'CITIZEN AUTHENTICATION CERTIFICATE'
 
-        logging.info( 'Entering PTEID_GetID with PyKCSS session id: {:2d}'.format(sessionIdx))
+        logging.info('Entering PTEID_GetID with PyKCSS session id: {:2d}'.format(sessionIdx))
 
         try:
             info = self.sessions[sessionIdx].findObjects(template=([(PyKCS11.CKA_LABEL, AUTH_CERT_LABEL),
                                                                     (PyKCS11.CKA_CLASS, PyKCS11.CKO_CERTIFICATE)]))
         except PyKCS11Error:
-            logging.error(
-                              'The the smartcard with the id: {:3d} unexpectedly closed the session'.format(
-                                  sessionIdx))
+            logging.error('The the smartcard with the id: {:3d} unexpectedly closed the session'.format(sessionIdx))
             return None
         else:
             try:
                 infos1 = ''.join(chr(c) for c in [c.to_dict()['CKA_SUBJECT'] for c in info][0])
             except (IndexError, TypeError):
-                logging.error(
-                                  ' Certificate \'{:15s}\' not found in PyKCSS session with the id :{:2d}'.format(
-                                      AUTH_CERT_LABEL))
+                logging.error('Certificate \'{:15s}\' not found in PyKCSS session with the id :{:2d}'.format(AUTH_CERT_LABEL))
                 return None
             else:
                 names = infos1.split('BI')[1].split('\x0c')
@@ -216,23 +207,19 @@ class PortugueseCitizenCard:
     def PTEID_GetBI(self, sessionIdx):
         AUTH_CERT_LABEL = 'CITIZEN AUTHENTICATION CERTIFICATE'
 
-        logging.info( 'Entering PTEID_GetID with PyKCSS session id: {:2d}'.format(sessionIdx))
+        logging.info('Entering PTEID_GetID with PyKCSS session id: {:2d}'.format(sessionIdx))
 
         try:
             info = self.sessions[sessionIdx].findObjects(template=([(PyKCS11.CKA_LABEL, AUTH_CERT_LABEL),
                                                                     (PyKCS11.CKA_CLASS, PyKCS11.CKO_CERTIFICATE)]))
         except PyKCS11Error:
-            logging.error(
-                              'The the smartcard with the id: {:3d} unexpectedly closed the session'.format(
-                                  sessionIdx))
+            logging.error('The the smartcard with the id: {:3d} unexpectedly closed the session'.format(sessionIdx))
             return None
         else:
             try:
                 infos1 = ''.join(chr(c) for c in [c.to_dict()['CKA_SUBJECT'] for c in info][0])
             except (IndexError, TypeError):
-                logging.error(
-                                  ' Certificate \'{:15s}\' not found in PyKCSS session with the id :{:2d}'.format(
-                                      AUTH_CERT_LABEL))
+                logging.error('Certificate \'{:15s}\' not found in PyKCSS session with the id :{:2d}'.format(AUTH_CERT_LABEL))
                 return None
             else:
                 bi = infos1.split('BI')[1][:8]
@@ -253,15 +240,13 @@ class PortugueseCitizenCard:
     def PTEID_GetCertificate(self, slot):
         AUTH_CERT_LABEL = 'CITIZEN AUTHENTICATION CERTIFICATE'
 
-        logging.info( 'Entering PTEID_GetCertificate with PyKCSS session id :{:2d}'.format(slot))
+        logging.info('Entering PTEID_GetCertificate with PyKCSS session id :{:2d}'.format(slot))
 
         try:
             info = self.sessions[slot].findObjects(
                 template=([(PyKCS11.CKA_CLASS, PyKCS11.CKO_CERTIFICATE), (PyKCS11.CKA_LABEL, AUTH_CERT_LABEL)]))
         except PyKCS11Error:
-            logging.error(
-                              'The the smartcard in the slot with the id: {:3d} unexpectedly closed the session'.format(
-                                  slot))
+            logging.error('The the smartcard in the slot with the id: {:3d} unexpectedly closed the session'.format(slot))
             exit(12)
         else:
             try:
@@ -269,23 +254,17 @@ class PortugueseCitizenCard:
                 der = bytes([c.to_dict()['CKA_VALUE'] for c in info][0])
 
             except (IndexError, TypeError):
-                logging.error(
-                                  ' Certificate \'{:15s}\' not found in PyKCSS session with the id :{:2d}'.format(
-                                      AUTH_CERT_LABEL))
+                logging.error('Certificate \'{:15s}\' not found in PyKCSS session with the id :{:2d}'.format(AUTH_CERT_LABEL))
                 return None
             else:
                 # converting DER format to x509 certificate
                 try:
                     cert = x509.load_der_x509_certificate(der, default_backend()).public_bytes(Encoding.PEM)
                 except:
-                    logging.error(
-                                      ' Certificate for smartcard in the slot:{:2d} was not loaded: \n'.format(slot))
+                    logging.error('Certificate for smartcard in the slot:{:2d} was not loaded: \n'.format(slot))
                     return None
                 else:
-                    logging.info(
-                                      ' Certificate for smartcard in the slot:{:2d} loaded:\n {:s}'.format(slot,
-                                                                                                           cert.decode(
-                                                                                                               'utf-8')))
+                    logging.info('Certificate for smartcard in the slot:{:2d} loaded:\n {:s}'.format(slot, cert.decode('utf-8')))
                     self.cert = x509.load_pem_x509_certificate(cert, default_backend())
                     return cert
 
@@ -296,8 +275,7 @@ class PortugueseCitizenCard:
         try:
             fullnames = [self.PTEID_GetID(i) for i in self.slots]
         except:
-            logging.error(
-                              'The service was unable to fetch all smartcards data')
+            logging.error('The service was unable to fetch all smartcards data')
             return None
         else:
             return fullnames
@@ -320,24 +298,14 @@ class PortugueseCitizenCard:
 
         if isinstance(data, str):
             try:
-                privateKey = self.sessions[slot].findObjects(template=([(PyKCS11.CKA_CLASS, PyKCS11.CKO_PRIVATE_KEY),
-                                                                        (
-                                                                        PyKCS11.CKA_LABEL, 'CITIZEN AUTHENTICATION KEY')
-                                                                        ]))[0]
+                privateKey = self.sessions[slot].findObjects(template=([(PyKCS11.CKA_CLASS, PyKCS11.CKO_PRIVATE_KEY),(PyKCS11.CKA_LABEL, 'CITIZEN AUTHENTICATION KEY')]))[0]
 
                 signedBytelist = session.sign(privateKey, data.encode(), cipherMechnism)
-                logging.info(
-                                  'The smartcard with the id: {:3d}\n Signed this Data: {:15s} \n Signature : {}'.format(
-                                      slot, data,
-                                      bytes(signedBytelist)))
+                logging.info('The smartcard with the id: {:3d}\n Signed this Data: {:15s} \n Signature : {}'.format(slot, data, bytes(signedBytelist)))
             except PyKCS11Error:
-                logging.error(
-                                  'The smartcard with the id: {:3d} unexpectedly closed the session while trying to sign data'.format(
-                                      slot))
+                logging.error('The smartcard with the id: {:3d} unexpectedly closed the session while trying to sign data'.format(slot))
             except IndexError:
-                logging.error(
-                                  'The smartcard with the id: {:3d} unexpectedly closed the session'.format(
-                                      slot))
+                logging.error('The smartcard with the id: {:3d} unexpectedly closed the session'.format(slot))
             else:
                 return bytes(signedBytelist)
         return None
@@ -352,7 +320,7 @@ class PortugueseCitizenCard:
         padding = _aspaadding.PKCS1v15()
 
         if not isinstance(pubk, rsa.RSAPublicKey):
-            logging.error( 'The provided certificate does not have a RSA public Key')
+            logging.error('The provided certificate does not have a RSA public Key')
             return False
         try:
             state = pubk.verify(
@@ -363,15 +331,14 @@ class PortugueseCitizenCard:
             )
 
         except InvalidSignature as strerror:
-            logging.error( 'Invalid Signature %s'.format(strerror.__doc__))
+            logging.error('Invalid Signature %s'.format(strerror.__doc__))
             return False
         except TypeError:
-            logging.error( 'Invalid Signature %s'.format(TypeError.__doc__))
+            logging.error('Invalid Signature %s'.format(TypeError.__doc__))
             return False
         else:
-            logging.info(
-                              'The smartcard with the id: {:3d} signed data. Signature :\n{} \n Status: Signature '
-                              'Verified'.format(slot,signature))
+            logging.info('The smartcard with the id: {:3d} signed data. Signature :\n{} \n Status: Signature'
+            'Verified'.format(slot,signature))
             return True
 
     def logout(self, slot):
@@ -381,9 +348,7 @@ class PortugueseCitizenCard:
             session.closeSession()
         except PyKCS11Error as strerror:
             session.closeSession()
-            logging.debug(
-                              ' No open session found for slot with the id :{:2d} \nInfo : \n{:15s}'.format(slot,
-                                                                                                            strerror.__doc__))
+            logging.debug('No open session found for slot with the id :{:2d} \nInfo : \n{:15s}'.format(slot, strerror.__doc__))
 
     def GetNameFromCERT(self,cert):
         if isinstance(cert,str):
