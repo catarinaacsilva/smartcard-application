@@ -1,3 +1,5 @@
+# coding: utf-8
+
 from os import listdir
 from time import sleep
 import PyKCS11
@@ -366,7 +368,7 @@ class PortugueseCitizenCard:
         ][-1]
         name=relativedistinguishedname._attributes[0].value
         return name
-
+'''
 if __name__ == '__main__':
     try:
         pteid = PortugueseCitizenCard()
@@ -409,3 +411,4 @@ if __name__ == '__main__':
     else:
         pteid.logout(slot)
         pteid.sessions[slot].closeSession()
+'''
