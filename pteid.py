@@ -338,8 +338,8 @@ class PortugueseCitizenCard:
             logging.error('Invalid Signature %s'.format(TypeError.__doc__))
             return False
         else:
-            logging.info('The smartcard with the id: {:3d} signed data. Signature :\n{} \n Status: Signature'
-            'Verified'.format(slot,signature))
+            #logging.info('The smartcard with the id: {:3d} signed data. Signature :\n{} \n Status: Signature'
+            #'Verified'.format(slot,signature))
             return True
 
     '''
