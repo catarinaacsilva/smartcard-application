@@ -4,14 +4,19 @@
 import base64
 from flask import Flask, request, jsonify
 from pteid import PortugueseCitizenCard
+from flask_cors import CORS
 
 
 app = Flask(__name__)
+CORS(app)
 
 
 @app.route('/sign', methods=['GET'])
 def sign():
     data = request.args.get('data')
+    print(data)
+    data = base64.urlsafe_b64decode(data).decode('UTF-8')
+    print(data)
     pteid = PortugueseCitizenCard()
     if len(pteid.sessions) > 0:
         pteid.login(0)
