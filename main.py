@@ -32,7 +32,9 @@ def sign():
 @app.route('/verify', methods=['GET'])
 def verify():
     data = request.args.get('data')
+    data = base64.urlsafe_b64decode(data).decode('UTF-8')
     signedData = request.args.get('signedData')
+    signedData = base64.urlsafe_b64decode(signedData).decode('UTF-8')
     pteid = PortugueseCitizenCard()
     if len(pteid.sessions) > 0:
         pteid.login(0)
